@@ -133,10 +133,16 @@
     <string name="switchwifi">切换</string>
 	<string name="alert_diag_title">提示</string>
 	<string name="are_you_sure_to_exit">确认要退出吗？</string>
-	
+    <string name="music_is_play_must_exit">盘存之前必须停止音乐播放！</string>
+
+    <!-- new -->
+    <string name="file_name">文件:</string>
+	<string name="file_dir">目录:</string>
+
     <string name="item_1">6C 标签操作</string>
     <string name="item_2">6B 标签操作</string>
     <string name="item_3">高级设置</string>
+    <string name="item_add1">导出Excel</string>
     <string name="item_4">退出</string>
     
     <string name="tab_title1">盘存标签</string>

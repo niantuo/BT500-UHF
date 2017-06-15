@@ -7,7 +7,6 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +19,6 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.com.tools.ExcelUtils;
 import com.reader.base.CMD;
 import com.reader.base.ERROR;
 import com.reader.base.ReaderBase;
@@ -205,24 +203,11 @@ public class PageInventoryReal extends LinearLayout {
 	}
 
 	public void refresh() {
-		test();
-		/*
 		m_curInventoryBuffer.clearInventoryRealResult();
 		refreshList();
 		refreshText();
 		clearText();
-		mRealRoundEditText.setText("1"); */
-	}
-
-	private void test() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				List<InventoryBuffer.InventoryTagMap> maps = m_curInventoryBuffer.lsTagList;
-				ExcelUtils.writeTagToExcel("test/a.xls",maps);
-				Log.d(TAG,"build finsh");
-			}
-		}).start();
+		mRealRoundEditText.setText("1");
 	}
 
 
@@ -446,6 +431,7 @@ public class PageInventoryReal extends LinearLayout {
 	}
 
 	private void clearText() {
+		mReaderHelper.setInventoryTotal(0);
 		mTagsCountText.setText("0");
 		mTagsTotalText.setText("0");
 		mTagsSpeedText.setText("0");

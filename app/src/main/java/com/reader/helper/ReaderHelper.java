@@ -942,7 +942,7 @@ public class ReaderHelper {
 		String strErrorCode = "";
 
 		if (btAryData.length == 0x01) {
-			strErrorCode = CMD.format(btAryData[0]);
+			strErrorCode = ERROR.format(btAryData[0]);
 			String strLog = strCmd
 					+ mContext.getResources()
 							.getString(R.string.failure_reason) + strErrorCode;
@@ -985,7 +985,7 @@ public class ReaderHelper {
 		String strErrorCode = "";
 
 		if (btAryData.length == 0x01) {
-			strErrorCode = CMD.format(btAryData[0]);
+			strErrorCode = ERROR.format(btAryData[0]);
 			String strLog = strCmd
 					+ mContext.getResources()
 							.getString(R.string.failure_reason) + strErrorCode;
@@ -995,7 +995,7 @@ public class ReaderHelper {
 			int nEpcLen = (btAryData[2] & 0xFF) - 4;
 
 			if (btAryData[nLen - 3] != ERROR.SUCCESS) {
-				strErrorCode = CMD.format(btAryData[nLen - 3]);
+				strErrorCode = ERROR.format(btAryData[nLen - 3]);
 				String strLog = strCmd
 						+ mContext.getResources().getString(
 								R.string.failure_reason) + strErrorCode;
@@ -1097,7 +1097,7 @@ public class ReaderHelper {
 		String strCmd = CMD.format(btCmd);
 		String strErrorCode = "";
 		
-		if (btAryData.length == 0x01) { // 本次获取因为错误结束
+		if (btAryData.length == 0x01) {
 			strErrorCode = ERROR.format(btAryData[0]);
 			String strLog = strCmd
 					+ mContext.getResources()
@@ -1106,7 +1106,7 @@ public class ReaderHelper {
 			writeLog(strLog, ERROR.FAIL);
 			refreshInventoryReal(INVENTORY_ERR_END, m_curInventoryBuffer);
 			runLoopInventroy();
-		} else if (btAryData.length == 0x07) { // 本次获取正常结束
+		} else if (btAryData.length == 0x07) {
 			m_curInventoryBuffer.nReadRate = (btAryData[1] & 0xFF) * 256
 					+ (btAryData[2] & 0xFF);			
 			m_curInventoryBuffer.nDataCount = (btAryData[3] & 0xFF) * 256 * 256
