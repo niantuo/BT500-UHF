@@ -1,22 +1,6 @@
 package com.uhf.uhf.setpage;
 
 
-import com.reader.base.ERROR;
-import com.reader.base.ReaderBase;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
-import com.uhf.uhf.LogList;
-import com.uhf.uhf.R;
-import com.uhf.uhf.UHFApplication;
-import com.uhf.uhf.R.id;
-import com.uhf.uhf.R.layout;
-import com.ui.base.BaseActivity;
-
-import android.R.integer;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -26,9 +10,22 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+
+import com.com.tools.Beeper;
+import com.reader.base.ERROR;
+import com.reader.base.ReaderBase;
+import com.reader.helper.ISO180006BOperateTagBuffer;
+import com.reader.helper.InventoryBuffer;
+import com.reader.helper.OperateTagBuffer;
+import com.reader.helper.ReaderHelper;
+import com.reader.helper.ReaderSetting;
+import com.uhf.uhf.LogList;
+import com.uhf.uhf.R.id;
+import com.uhf.uhf.R.layout;
+import com.uhf.uhf.UHFApplication;
+import com.ui.base.BaseActivity;
 
 public class PageReaderBeeper extends BaseActivity {
 	private LogList mLogList;
@@ -83,18 +80,26 @@ public class PageReaderBeeper extends BaseActivity {
 
 			public void onClick(View v) {
 				byte btMode = 0;
+				Beeper.BeepMode beepMode;
 				switch (mGroupBeeper.getCheckedRadioButtonId()) {
 				case id.set_beeper_quiet:
 					btMode = 0;
+					beepMode = Beeper.BeepMode.QUITE;
 					break;
 				case id.set_beeper_all:
 					btMode = 1;
+					beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
 					break;
 				case id.set_beeper_one:
 					btMode = 2;
+					beepMode = Beeper.BeepMode.BEEP_PER_TAG;
+					break;
+				default:
+					beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
 					break;
 				}
-				mReader.setBeeperMode(m_curReaderSetting.btReadId, btMode);
+				Beeper.setBeepMode(beepMode);
+				//mReader.setBeeperMode(m_curReaderSetting.btReadId, btMode);
 				m_curReaderSetting.btBeeperMode = btMode;
 			}
 		});

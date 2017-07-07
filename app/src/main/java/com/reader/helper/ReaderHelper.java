@@ -966,7 +966,6 @@ public class ReaderHelper {
                     + (btAryData[2] & 0xFF);
             m_curInventoryBuffer.nReadRate = (btAryData[3] & 0xFF) * 256
                     + (btAryData[4] & 0xFF);
-            Log.d("Print the rate", ((btAryData[3] & 0xFF) * 256 + (btAryData[4] & 0xFF)) + "::::");
             int nTotalRead = (btAryData[5] & 0xFF) * 256 * 256 * 256
                     + (btAryData[6] & 0xFF) * 256 * 256 + (btAryData[7] & 0xFF)
                     * 256 + (btAryData[8] & 0xFF);
@@ -976,7 +975,7 @@ public class ReaderHelper {
 
             refreshInventory(btCmd, m_curInventoryBuffer);
             writeLog(strCmd, ERROR.SUCCESS);
-            Beeper.beep();
+            Beeper.beep(Beeper.BEEPER);
 
             runLoopInventroy();
             return;
@@ -1171,9 +1170,8 @@ public class ReaderHelper {
             m_curInventoryBuffer.nDataCount = (btAryData[3] & 0xFF) * 256 * 256
                     * 256 + (btAryData[4] & 0xFF) * 256 * 256
                     + (btAryData[5] & 0xFF) * 256 + (btAryData[6] & 0xFF);
-            Log.d("Print the rate", StringTool.byteArrayToString(msgTran.getAryTranData(), 0, msgTran.getAryTranData().length));
             writeLog(strCmd, ERROR.SUCCESS);
-            Beeper.beep();
+            Beeper.beep(Beeper.BEEPER);
             refreshInventoryReal(INVENTORY_END, m_curInventoryBuffer);
             runLoopInventroy();
         } else {
@@ -1218,6 +1216,7 @@ public class ReaderHelper {
 
             m_curInventoryBuffer.dtEndInventory = new Date();
             refreshInventoryReal(btCmd, m_curInventoryBuffer);
+            Beeper.beep(Beeper.BEEPER_SHORT);
         }
     }
 

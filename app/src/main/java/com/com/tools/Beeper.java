@@ -12,10 +12,10 @@ import com.uhf.uhf.R;
  */
 
 public class Beeper {
-    public static final int BEEPER = 0;
-    public static final int BEEPER_SHORT = 1;
+    public static final int BEEPER = 1;
+    public static final int BEEPER_SHORT = 2;
     private static boolean mQuite = false;
-    private static boolean mBeepInventoried = true;
+    private static boolean mBeepInventoried = false;
     private static boolean mBeepPerTag = false;
     private static final SoundPool mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC,5);
     private static  MediaPlayer mMediaPlayer = new MediaPlayer();
@@ -24,10 +24,7 @@ public class Beeper {
         /**
          * Must use SoundPool;
          */
-        /*
-         *
-         *
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+       /* mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer player) {
@@ -36,7 +33,7 @@ public class Beeper {
         });
         try {
         AssetFileDescriptor file = context.getResources().openRawResourceFd(
-                R.raw.beeper_short);
+                R.raw.beeper);
             mMediaPlayer.setDataSource(file.getFileDescriptor(),
                     file.getStartOffset(), file.getLength());
             file.close();
@@ -45,10 +42,7 @@ public class Beeper {
         } catch (IOException ioe) {
             mMediaPlayer = null;
             return;
-        } *
-        *
-        *
-        */
+        }*/
        // mSoundPool.load(context, R.raw.beeper,1);
         mSoundPool.load(context,R.raw.beeper,BEEPER);
         mSoundPool.load(context, R.raw.beeper_short,BEEPER_SHORT);
@@ -59,12 +53,15 @@ public class Beeper {
         }
         if (soundID == BEEPER && mBeepInventoried) {
             mSoundPool.play(BEEPER,1, 1, 0, 0, 1);
+            mBeepInventoried = false;
         } else if (soundID == BEEPER_SHORT && mBeepPerTag) {
             mSoundPool.play(BEEPER_SHORT,1, 1, 0, 0, 1);
         } else if (soundID == BEEPER_SHORT && !mBeepPerTag){
             mBeepInventoried = true;
+        } else {
+
         }
-       /* if (mMediaPlayer != null) {
+       /*if (mMediaPlayer != null) {
             mMediaPlayer.start();
         }*/
     }
