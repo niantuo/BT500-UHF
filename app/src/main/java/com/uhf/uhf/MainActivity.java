@@ -22,6 +22,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.com.tools.Beeper;
 import com.com.tools.ExcelUtils;
 import com.reader.base.ERROR;
 import com.reader.base.ReaderBase;
@@ -409,5 +410,6 @@ public class MainActivity extends BaseActivity {
         super.onDestroy();
         if (lbm != null)
             lbm.unregisterReceiver(mRecv);
+        Beeper.release();
     }
 }

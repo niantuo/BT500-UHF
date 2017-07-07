@@ -1,15 +1,5 @@
 package com.uhf.uhf;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import com.reader.base.ERROR;
-import com.reader.helper.ReaderHelper;
-
 import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
@@ -20,6 +10,17 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+
+import com.com.tools.Beeper;
+import com.reader.base.ERROR;
+import com.reader.helper.ReaderHelper;
+
+import java.io.IOException;
+import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class UHFApplication extends Application {
 
@@ -58,7 +59,7 @@ public class UHFApplication extends Application {
 		}
 		
 		mContext = getApplicationContext();
-
+		Beeper.init(mContext);
 		
 		/*CrashHandler crashHandler = CrashHandler.getInstance();
 		crashHandler.init(getApplicationContext());*/

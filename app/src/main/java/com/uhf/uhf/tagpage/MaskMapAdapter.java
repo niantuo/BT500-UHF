@@ -6,7 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
 import com.uhf.uhf.R;
+
 import java.util.List;
 
 /**
@@ -32,13 +34,13 @@ public final class ListItemView {
 }
 
     public static class MaskMap {
-        String mMaskNo;
-        String mTarget;
-        String mAction;
-        String mMembank;
-        String mStartMaskAdd;
-        String mMaskLen;
-        String mMaskValue;
+        public String mMaskNo;
+        public String mTarget;
+        public String mAction;
+        public String mMembank;
+        public String mStartMaskAdd;
+        public String mMaskLen;
+        public String mMaskValue;
     }
 
 

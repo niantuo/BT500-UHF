@@ -63,6 +63,8 @@ public class ReaderSetting {
 	public byte btUserDefineChannelQuantity;
 	/** Rf communications link*/
 	public byte btRfLinkProfile;
+	/** Get the mask setting value*/
+	public byte[] btsGetMaskValue;
 
 
 	/**
