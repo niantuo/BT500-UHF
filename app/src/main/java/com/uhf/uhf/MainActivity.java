@@ -9,29 +9,28 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.com.tools.Beeper;
-import com.com.tools.ExcelUtils;
-import com.reader.base.ERROR;
-import com.reader.base.ReaderBase;
-import com.reader.helper.ControlGPIO;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
+import com.nativec.tools.ModuleManager;
 import com.uhf.uhf.PopupMenu.MENUITEM;
 import com.uhf.uhf.PopupMenu.OnItemClickListener;
 import com.uhf.uhf.spiner.DialogCustomed;
@@ -42,14 +41,30 @@ import com.uhf.uhf.tagpage.PageTagAccess;
 import com.ui.base.BaseActivity;
 import com.ui.base.PreferenceUtil;
 
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import cn.tonyandmoney.tina.uhf_lib.base.Converter;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.base.MessageTran;
+import cn.tonyandmoney.tina.uhf_lib.base.ReaderBase;
+import cn.tonyandmoney.tina.uhf_lib.base.StringTool;
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderSetting;
+import cn.tonyandmoney.tina.uhf_lib.tools.Beeper;
+import cn.tonyandmoney.tina.uhf_lib.tools.ExcelUtils;
 
 
 public class MainActivity extends BaseActivity {
     private ViewPager mPager;
     private List<View> listViews;
-    private TextView title[] = new TextView[2];
+    private TextView title[] = new TextView[3];
     private int currIndex = 0;
 
     private TextView mRefreshButton;
@@ -58,7 +73,7 @@ public class MainActivity extends BaseActivity {
     private ReaderHelper mReaderHelper;
 
     //test
-    public static Activity activity ;
+    public static Activity activity;
 
     public static boolean mIsMonitorOpen = false;
 
@@ -66,6 +81,8 @@ public class MainActivity extends BaseActivity {
     private static InventoryBuffer m_curInventoryBuffer;
     private static OperateTagBuffer m_curOperateTagBuffer;
     private static ISO180006BOperateTagBuffer m_curOperateTagISO18000Buffer;
+
+    public static int mSaveType = 0;
 
     //private Setting mViewSetting;
     //private Tag	mTag;
@@ -88,8 +105,6 @@ public class MainActivity extends BaseActivity {
         }
         super.onResume();
     }
-
-    ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +136,9 @@ public class MainActivity extends BaseActivity {
                         ((PageTag6BAccess) findViewById(R.id.view_PageTag6BAccess)).refresh();
                     }
                 }
+
+                if (currIndex == 2) refreshMonitor();
+
             }
         });
 
@@ -199,6 +217,7 @@ public class MainActivity extends BaseActivity {
         itent.addAction(ReaderHelper.BROADCAST_REFRESH_READER_SETTING);
         itent.addAction(ReaderHelper.BROADCAST_WRITE_LOG);
         itent.addAction(ReaderHelper.BROADCAST_WRITE_DATA);
+        itent.addAction(ReaderHelper.BROADCAST_REC_DATA);
 
         lbm.registerReceiver(mRecv, itent);
     }
@@ -224,19 +243,230 @@ public class MainActivity extends BaseActivity {
                 //mLogList.writeLog((String)intent.getStringExtra("log"), intent.getIntExtra("type", ERROR.SUCCESS));
             } else if (intent.getAction().equals(ReaderHelper.BROADCAST_WRITE_DATA) && PreferenceUtil.getBoolean(Monitor.mIsChecked, false) && !mIsMonitorOpen) {
                 ((UHFApplication) getApplication()).writeMonitor((String) intent.getStringExtra("log"), intent.getIntExtra("type", ERROR.SUCCESS));
+                mMonitorListAdapter.notifyDataSetChanged();
                 //fixed by lei.li avoid observer serial port when the switch on
+            }
 
+            if (intent.getAction().equals(ReaderHelper.BROADCAST_REC_DATA)) {
+                //Log.e("lisn3188","Rec: = " + (String)intent.getStringExtra("log") );
+                if (currIndex == 2) {
+                    if (hexen.isChecked()) {
+                        show_data((String) intent.getStringExtra("log"));
+                    } else {
+                        byte[] rec = getStringhex((String) intent.getStringExtra("log"));
+                        /*
+                        try{
+                            String temp = new String(rec, 0, rec.length,"GBK");
+                            show_data(temp);
+                        }catch	(UnsupportedEncodingException e){
+                            throw   new   RuntimeException("Unsupported   encoding   type.");
+                        }
+                        */
+                        decode_RFID((String) intent.getStringExtra("log"));
+                    }
+                }
             }
         }
     };
 
+    byte recbuf[] = new byte[1024];
+    int wrindex = 0;
+    String RFID;
+    boolean headen = false;
+
+    private void decode_RFID(String recstr) {
+        // dfe
+        int i;
+        byte dat;
+        byte[] rec = getStringhex(recstr);
+        if (rec == null || rec.length < 1) return;
+        for (i = 0; i < rec.length; i++) {
+            dat = rec[i];
+            if ((dat == 0x0d)) {
+                //   recbuf[wrindex++] = dat;
+                //   headen = true;continue;
+                //}else if((dat == 0x0a)&&(headen = true)){
+                if (wrindex < 2) {
+                    headen = false;
+                    wrindex = 0;
+                    return;
+                }
+                if (wrindex > 400) {
+                    headen = false;
+                    wrindex = 0;
+                    return;
+                }
+                RFID = null;
+                try {
+                    RFID = new String(recbuf, 0, wrindex, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException("Unsupported   encoding   type.");
+                }
+                wrindex = 0;
+                if (RFID == null) return;
+                Date now = new Date();
+                SimpleDateFormat temp = new SimpleDateFormat("kk:mm:ss");
+                String sTime = temp.format(now);
+                //((TextView)findViewById(R.id.rfidshow)).setText("Time "+sTime +" RFID = "+ RFID);
+                ((TextView) listViews.get(2).findViewById(R.id.rfidshow2)).setText("Time " + sTime + " RFID = " + RFID);
+                show_data(RFID + "\n");
+            } else if (dat == 0x0a && wrindex == 0) {
+                wrindex = 0;
+            } else {
+                recbuf[wrindex++] = dat;
+            }
+            headen = false;
+            if (wrindex > 1000) wrindex = 1000;
+        }
+
+    }
+
+    public byte[] getStringhex(String ST) {
+        ST = ST.replaceAll(" ", "");
+        //Log.v("getStringhex",ST);
+        char[] buffer = ST.toCharArray();
+        byte[] Byte = new byte[buffer.length / 2];
+        int index = 0;
+        int bit_st = 0;
+        for (int i = 0; i < buffer.length; i++) {
+            int v = (int) (buffer[i] & 0xFF);
+            if (((v > 47) && (v < 58)) || ((v > 64) && (v < 71)) || ((v > 96) && (v < 103))) {
+                if (bit_st == 0) {
+                    Byte[index] |= (getASCvalue(buffer[i]) * 16);
+                    bit_st = 1;
+                } else {
+                    Byte[index] |= (getASCvalue(buffer[i]));
+                    bit_st = 0;
+                    index++;
+                }
+            } else if (v == 32) {
+                if (bit_st == 0) ;
+                else {
+                    index++;
+                    bit_st = 0;
+                }
+            } else continue;
+        }
+        bit_st = 0;
+        return Byte;
+    }
+
+    public static byte getASCvalue(char in) {
+        byte out = 0;
+        switch (in) {
+            case '0':
+                out = 0;
+                break;
+            case '1':
+                out = 1;
+                break;
+            case '2':
+                out = 2;
+                break;
+            case '3':
+                out = 3;
+                break;
+            case '4':
+                out = 4;
+                break;
+            case '5':
+                out = 5;
+                break;
+            case '6':
+                out = 6;
+                break;
+            case '7':
+                out = 7;
+                break;
+            case '8':
+                out = 8;
+                break;
+            case '9':
+                out = 9;
+                break;
+            case 'a':
+                out = 10;
+                break;
+            case 'b':
+                out = 11;
+                break;
+            case 'c':
+                out = 12;
+                break;
+            case 'd':
+                out = 13;
+                break;
+            case 'e':
+                out = 14;
+                break;
+            case 'f':
+                out = 15;
+                break;
+            case 'A':
+                out = 10;
+                break;
+            case 'B':
+                out = 11;
+                break;
+            case 'C':
+                out = 12;
+                break;
+            case 'D':
+                out = 13;
+                break;
+            case 'E':
+                out = 14;
+                break;
+            case 'F':
+                out = 15;
+                break;
+        }
+        return out;
+    }
+
     private void InitTextView() {
         title[0] = (TextView) findViewById(R.id.tab_index1);
         title[1] = (TextView) findViewById(R.id.tab_index2);
+        //title[2] = (TextView) findViewById(R.id.tab_index3);
 
         title[0].setOnClickListener(new MyOnClickListener(0));
         title[1].setOnClickListener(new MyOnClickListener(1));
+        //title[2].setOnClickListener(new MyOnClickListener(2));
     }
+
+    LinearLayout mLayout;
+    TextView msg_Text;
+    ScrollView mScrollView;
+    private final Handler tHandler = new Handler();
+    private Runnable mScrollToBottom = new Runnable() {
+        @Override
+        public void run() {
+            int off = mLayout.getMeasuredHeight() - mScrollView.getHeight();
+            if (off > 0) {
+                mScrollView.scrollTo(0, off);
+            }
+        }
+    };
+
+    public void show_data(String t) {
+        if (msg_Text.getText().toString().length() > 2000) {
+            String nstr = msg_Text.getText().toString();
+            nstr = nstr.substring(t.length(), nstr.length());
+            msg_Text.setText(nstr);
+        }
+        //msg_Text.append(Html.fromHtml(t));
+        msg_Text.append(t);
+        tHandler.post(mScrollToBottom);//更新Scroll
+    }
+
+    private ListView mMonitorList;
+    private ArrayAdapter<CharSequence> mMonitorListAdapter;
+    private UHFApplication app;
+    private TextView mDataSendButton;
+    private HexEditTextBox mDataText, mDataText2;
+    CheckBox hexen;
+    private HexEditTextBox mDataCheck;
+    Context mcontext;
 
     private void InitViewPager(MENUITEM item) {
         cur_item = item;
@@ -246,18 +476,112 @@ public class MainActivity extends BaseActivity {
         if (item == MENUITEM.ITEM1) {
             listViews.add(mInflater.inflate(R.layout.lay1, null));
             listViews.add(mInflater.inflate(R.layout.lay2, null));
+            listViews.add(mInflater.inflate(R.layout.monitor2, null));
         } else if (item == MENUITEM.ITEM2) {
             listViews.add(mInflater.inflate(R.layout.lay3, null));
             listViews.add(mInflater.inflate(R.layout.lay4, null));
+            listViews.add(mInflater.inflate(R.layout.monitor2, null));
         }
+        app = (UHFApplication) getApplication();
+        mMonitorList = (ListView) listViews.get(2).findViewById(R.id.monitor_list_view);
+        mMonitorListAdapter = new ArrayAdapter<CharSequence>(this, R.layout.monitor_list_item, app.mMonitorListItem);
+        mMonitorList.setAdapter(mMonitorListAdapter);
+
         mPager.setAdapter(new MyPagerAdapter(listViews));
         mPager.setCurrentItem(0);
         mPager.setOnPageChangeListener(new MyOnPageChangeListener());
         currIndex = 0;
-        title[1].setBackgroundResource(R.drawable.btn_select_background_select_left_down);
+        title[1].setBackgroundResource(R.drawable.btn_select_background_select_mid_down);
         title[0].setBackgroundResource(R.drawable.btn_select_background_select_right);
+        //title[2].setBackgroundResource(R.drawable.btn_select_background_select_left_down);
+        //title[2].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
         title[1].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
         title[0].setTextColor(Color.rgb(0xFF, 0xFF, 0xFF));
+        listViews.get(2).findViewById(R.id.refresh).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                refreshMonitor();
+            }
+        });
+
+        msg_Text = (TextView) listViews.get(2).findViewById(R.id.Text1);
+        mcontext = this;
+        mLayout = (LinearLayout) listViews.get(2).findViewById(R.id.layout);
+        mScrollView = (ScrollView) listViews.get(2).findViewById(R.id.sv);
+        mDataText = (HexEditTextBox) listViews.get(2).findViewById(R.id.data_send_text);
+        mDataText2 = (HexEditTextBox) listViews.get(2).findViewById(R.id.data_send_t);
+        hexen = (CheckBox) listViews.get(2).findViewById(R.id.check_hex);
+        mDataText.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+                // TODO Auto-generated method stub
+                String[] result = StringTool.stringToStringArray(mDataText.getText().toString().toUpperCase(), 2);
+                try {
+                    byte[] buf = StringTool.stringArrayToByteArray(result, result.length);
+                    MessageTran msgTran = new MessageTran();
+                    byte check = msgTran.checkSum(buf, 0, buf.length);
+                    mDataCheck.setText("" + Converter.byteToHex((int) (check & 0xFF) / 16) + Converter.byteToHex((check & 0xFF) % 16));
+                } catch (Exception e) {
+                }
+                ;
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                          int arg3) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable arg0) {
+                // TODO Auto-generated method stub
+
+            }
+        });
+
+        mDataSendButton = (TextView) listViews.get(2).findViewById(R.id.sendd);
+        mDataSendButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+               /*
+                String cmd = mDataText.getText().toString().toUpperCase() + mDataCheck.getText().toString().toUpperCase();
+                String[] result = StringTool.stringToStringArray(cmd, 2);
+                if (result != null && result.length > 0) {
+                    mReader.sendBuffer(StringTool.stringArrayToByteArray(result, result.length));
+                } else {
+                    //Toast.makeText(, "Command not allow empty", Toast.LENGTH_SHORT).show();
+                }
+                */
+                String cmd = mDataText2.getText().toString();
+                if (hexen.isChecked()) {
+                    String[] result = StringTool.stringToStringArray(cmd, 2);
+                    if (result != null && result.length > 0) {
+                        // mReader.sendBuffer(StringTool.stringArrayToByteArray(result, result.length));
+                        mReader.sendBuffer(getStringhex(cmd));
+                    }
+                } else {
+                    if (cmd != null) {
+                        try {
+                            byte[] send = cmd.getBytes("GBK");
+                            mReader.sendBuffer(send);
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+        mDataCheck = (HexEditTextBox) listViews.get(2).findViewById(R.id.data_send_check);
+    }
+
+    public final void refreshMonitor() {
+        //mMonitorListAdapter.clear();
+        msg_Text.setText("");
+        mDataText.setText("");
+        app.mMonitorListItem.clear();
+        mMonitorListAdapter.notifyDataSetChanged();
     }
 
     public class MyPagerAdapter extends PagerAdapter {
@@ -327,18 +651,24 @@ public class MainActivity extends BaseActivity {
         public void onPageSelected(int arg0) {
             currIndex = arg0;
             if (0 == currIndex) {
-                title[1].setBackgroundResource(R.drawable.btn_select_background_select_left_down);
+                title[1].setBackgroundResource(R.drawable.btn_select_background_select_mid_down);
                 title[0].setBackgroundResource(R.drawable.btn_select_background_select_right);
-                //title[0].setBackgroundColor(Color.rgb(0x00, 0xBB, 0xF7));
-                //title[1].setBackgroundColor(Color.rgb(0xFF, 0xFF, 0xFF));
-            } else {
-                title[1].setBackgroundResource(R.drawable.btn_select_background_select_left);
+                //title[2].setBackgroundResource(R.drawable.btn_select_background_select_left_down);
+                mSaveType = 0;
+            } else if (1 == currIndex) {
+                title[1].setBackgroundResource(R.drawable.btn_select_background_select_mid);
                 title[0].setBackgroundResource(R.drawable.btn_select_background_select_right_down);
-                //title[0].setBackgroundColor(Color.rgb(0xFF, 0xFF, 0xFF));
-                //title[1].setBackgroundColor(Color.rgb(0x00, 0xBB, 0xF7));
+                // title[2].setBackgroundResource(R.drawable.btn_select_background_select_left_down);
+                mSaveType = 1;
+            } else {
+                title[1].setBackgroundResource(R.drawable.btn_select_background_select_mid_down);
+                title[0].setBackgroundResource(R.drawable.btn_select_background_select_right_down);
+                //title[2].setBackgroundResource(R.drawable.btn_select_background_select_left);
             }
 
-            title[1 - currIndex].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
+            title[0].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
+            title[1].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
+            // title[2].setTextColor(Color.rgb(0x00, 0xBB, 0xF7));
             title[currIndex].setTextColor(Color.rgb(0xFF, 0xFF, 0xFF));
         }
 
@@ -354,15 +684,22 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-
-			/*if (!mLogList.tryClose())
-				askForOut();*/
             askForOut();
 
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
             return true;
         }
 
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     private void askForOut() {
@@ -375,7 +712,7 @@ public class MainActivity extends BaseActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 //close the module
-                                ControlGPIO.newInstance().JNIwriteGPIO(0);
+                                ModuleManager.newInstance().setUHFStatus(false);
                                 getApplication().onTerminate();
                             }
                         }).setNegativeButton(getString(R.string.cancel),
@@ -391,8 +728,9 @@ public class MainActivity extends BaseActivity {
      * Save the tags as excel file;
      */
     private void saveExcel() {
-        DialogCustomed dialogCustomed = new DialogCustomed(this,R.layout.excel_save_dialog);
+        DialogCustomed dialogCustomed = new DialogCustomed(this, R.layout.excel_save_dialog);
         dialogCustomed.setTags(m_curInventoryBuffer.lsTagList);
+        dialogCustomed.setOperationTags(m_curOperateTagBuffer.lsTagList);
         dialogCustomed.getDialog();
     }
 
@@ -402,7 +740,6 @@ public class MainActivity extends BaseActivity {
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
-
 
     @Override
     protected void onDestroy() {

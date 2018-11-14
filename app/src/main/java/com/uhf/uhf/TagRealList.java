@@ -17,10 +17,10 @@ import android.widget.ListView;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.InventoryBuffer.InventoryTagMap;
-import com.reader.helper.ReaderHelper;
 import com.uhf.uhf.tagpage.RealListAdapter;
+
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
 
 public class TagRealList extends LinearLayout {
 	
@@ -34,7 +34,7 @@ public class TagRealList extends LinearLayout {
 
 	private ReaderHelper mReaderHelper;
 
-	private List<InventoryTagMap> data;
+	private List<InventoryBuffer.InventoryTagMap> data;
 	private RealListAdapter mRealListAdapter;
 	private ListView mTagRealList;
 
@@ -74,7 +74,7 @@ public class TagRealList extends LinearLayout {
 			e.printStackTrace();
 		}
 
-		data = new ArrayList<InventoryTagMap>();
+		data = new ArrayList<InventoryBuffer.InventoryTagMap>();
 		m_curInventoryBuffer = mReaderHelper.getCurInventoryBuffer();
 
 		mTagsRealListScrollView = findViewById(R.id.tags_real_list_scroll_view);
@@ -208,7 +208,7 @@ public class TagRealList extends LinearLayout {
 	// add by lei.li 2016/11/11
 	private int lengthestData() {
 		int widest = 0;
-		for (InventoryTagMap itm : m_curInventoryBuffer.lsTagList) {
+		for (InventoryBuffer.InventoryTagMap itm : m_curInventoryBuffer.lsTagList) {
 			if (widest < itm.strEPC.length())
 				widest = itm.strEPC.length();
 		}

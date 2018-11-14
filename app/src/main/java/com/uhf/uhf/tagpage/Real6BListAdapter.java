@@ -1,9 +1,6 @@
 package com.uhf.uhf.tagpage;
 
 import java.util.List;
-
-import com.reader.helper.ISO180006BOperateTagBuffer.ISO180006BOperateTagMap;
-import com.reader.helper.InventoryBuffer.InventoryTagMap;
 import com.uhf.uhf.R;
 import com.uhf.uhf.R.id;
 import com.uhf.uhf.R.layout;
@@ -15,12 +12,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+
 public class Real6BListAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 
 	private Context mContext;
 	
-	private List<ISO180006BOperateTagMap> listMap;
+	private List<ISO180006BOperateTagBuffer.ISO180006BOperateTagMap> listMap;
 	
 	public final class ListItemView{                     
 		public TextView mIdText;
@@ -29,7 +28,7 @@ public class Real6BListAdapter extends BaseAdapter {
 		public TextView mTimesText;
     }
 
-	public Real6BListAdapter(Context context, List<ISO180006BOperateTagMap> listMap) {
+	public Real6BListAdapter(Context context, List<ISO180006BOperateTagBuffer.ISO180006BOperateTagMap> listMap) {
 		this.mContext = context;
 		this.mInflater = LayoutInflater.from(context);
 		this.listMap = listMap;
@@ -68,7 +67,7 @@ public class Real6BListAdapter extends BaseAdapter {
 			listItemView = (ListItemView) convertView.getTag();
 		}
 		
-		ISO180006BOperateTagMap map = listMap.get(position);
+		ISO180006BOperateTagBuffer.ISO180006BOperateTagMap map = listMap.get(position);
 		
 		listItemView.mIdText.setText(String.valueOf(position + 1));
 		listItemView.mUIDText.setText(map.strUID);

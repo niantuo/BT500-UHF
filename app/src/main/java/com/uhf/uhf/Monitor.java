@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -17,19 +18,19 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.reader.base.Converter;
-import com.reader.base.ERROR;
-import com.reader.base.MessageTran;
-import com.reader.base.ReaderBase;
-import com.reader.base.StringTool;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
 import com.ui.base.BaseActivity;
 import com.ui.base.PreferenceUtil;
+
+import cn.tonyandmoney.tina.uhf_lib.base.Converter;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.base.MessageTran;
+import cn.tonyandmoney.tina.uhf_lib.base.ReaderBase;
+import cn.tonyandmoney.tina.uhf_lib.base.StringTool;
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderSetting;
 
 public class Monitor extends BaseActivity {
 	
@@ -81,7 +82,6 @@ public class Monitor extends BaseActivity {
 		} catch (Exception e) {
 			return ;
 		}
-		
 		m_curReaderSetting = mReaderHelper.getCurReaderSetting();
 		m_curInventoryBuffer = mReaderHelper.getCurInventoryBuffer();
 		m_curOperateTagBuffer = mReaderHelper.getCurOperateTagBuffer();
@@ -187,6 +187,7 @@ public class Monitor extends BaseActivity {
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(ReaderHelper.BROADCAST_WRITE_DATA) && mCheckOpenMonitor.isChecked()) {
             	app.writeMonitor((String)intent.getStringExtra("log"), intent.getIntExtra("type", ERROR.SUCCESS));
+
             	refreshMonitor();
             } 
 		}

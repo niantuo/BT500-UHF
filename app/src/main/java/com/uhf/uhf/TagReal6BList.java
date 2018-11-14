@@ -3,9 +3,6 @@ package com.uhf.uhf;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.ISO180006BOperateTagBuffer.ISO180006BOperateTagMap;
-import com.reader.helper.ReaderHelper;
 import com.uhf.uhf.tagpage.Real6BListAdapter;
 import android.content.Context;
 import android.util.AttributeSet;
@@ -21,6 +18,9 @@ import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout.LayoutParams;
 
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+
 
 public class TagReal6BList extends LinearLayout {
 	private Context mContext;
@@ -32,7 +32,7 @@ public class TagReal6BList extends LinearLayout {
 	
 	private ReaderHelper mReaderHelper;
 	
-	private List<ISO180006BOperateTagMap> data;
+	private List<ISO180006BOperateTagBuffer.ISO180006BOperateTagMap> data;
 	private Real6BListAdapter mReal6BListAdapter;
 	private ListView mTagReal6BList;
 	
@@ -69,7 +69,7 @@ public class TagReal6BList extends LinearLayout {
 			e.printStackTrace();
 		}
 		
-		data = new ArrayList<ISO180006BOperateTagMap>();
+		data = new ArrayList<ISO180006BOperateTagBuffer.ISO180006BOperateTagMap>();
 		m_curOperateTagISO18000Buffer = mReaderHelper.getCurOperateTagISO18000Buffer();
 		
 		mTagsReal6BListScrollView = findViewById(R.id.tags_real_6b_list_scroll_view);

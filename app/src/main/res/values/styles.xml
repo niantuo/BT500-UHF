@@ -4,4 +4,9 @@
     <style name="MyDialog" parent="android:Theme.Dialog">
         <item name="android:height">100dp</item>
     </style>
+
+    <style name ="mdiglogt2" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowNoTitle">false</item>
+    </style>
+
 </resources>

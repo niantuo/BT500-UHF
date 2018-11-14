@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -19,14 +20,6 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.reader.base.CMD;
-import com.reader.base.ERROR;
-import com.reader.base.ReaderBase;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
 import com.uhf.uhf.LogList;
 import com.uhf.uhf.R;
 import com.uhf.uhf.R.id;
@@ -38,6 +31,15 @@ import com.uhf.uhf.spiner.SpinerPopWindow;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import cn.tonyandmoney.tina.uhf_lib.base.CMD;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.base.ReaderBase;
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderSetting;
 
 public class PageInventoryReal extends LinearLayout {
 	private static final String TAG = "PageInventory";
@@ -225,6 +227,14 @@ public class PageInventoryReal extends LinearLayout {
 					R.string.start_inventory));
 		}
 	}
+
+	private Handler mUpdateViewHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			refreshText();
+			refreshList();
+		}
+	};
 
 	private Handler mHandler = new Handler();
 	private Runnable mRefreshRunnable = new Runnable() {
@@ -460,8 +470,7 @@ public class PageInventoryReal extends LinearLayout {
 					// add by lei.li 2016/11/04
 					// refreshStartStop(true);
 					// add by lei.li 2016/11/04
-					// Log.e("zhebian", "?????????????????????????????");
-
+					// Log.e("zhebian", "?????????????????????????????")
 					// add by lei.li 2016/11/14
 					if (!DEBUG) {
 						if (!mReaderHelper.getInventoryFlag()) {
@@ -478,8 +487,9 @@ public class PageInventoryReal extends LinearLayout {
 							}
 						}
 					}
+					mUpdateViewHandler.sendEmptyMessage(0);
 					// add by lei.li 2016/11/14
-					refreshList();
+					//refreshList();
 					// add by lei.li 2016/11/14
 
 					mHandler.removeCallbacks(mRefreshRunnable);
@@ -487,16 +497,15 @@ public class PageInventoryReal extends LinearLayout {
 					// add by lei.li 2016/11/14
 					mLoopHandler.removeCallbacks(mLoopRunnable);
 					mLoopHandler.postDelayed(mLoopRunnable, 2000);
-					refreshText();
+					//refreshText();
 					break;
 				case ReaderHelper.INVENTORY_ERR:
 				case ReaderHelper.INVENTORY_ERR_END:
 				case ReaderHelper.INVENTORY_END:
 					// add by lei.li have some problem why it was annotation
 					// refreshList();
-					refreshList();
+					//refreshList();
 					// add by lei.li
-
 					// add by lei.li 2016/11/
 					if (mReaderHelper.getInventoryFlag() /* || bTmpInventoryFlag */) {
 						mLoopHandler.removeCallbacks(mLoopRunnable);
@@ -513,7 +522,8 @@ public class PageInventoryReal extends LinearLayout {
 					// refreshStartStop(false);
 					// end_add by lei.li 2016/11/04
 					// start_add by lei.li 2016/11/04
-					refreshText(); // fixed by lei.li 2016/11/04
+					//refreshText(); // fixed by lei.li 2016/11/04
+					mUpdateViewHandler.sendEmptyMessage(0);
 					break;
 				}
 

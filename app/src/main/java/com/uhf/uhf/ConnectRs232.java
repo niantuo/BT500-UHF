@@ -1,6 +1,10 @@
 package com.uhf.uhf;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,10 +16,9 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.reader.helper.ControlGPIO;
-import com.reader.helper.ReaderHelper;
-import com.uhf.uhf.serialport.SerialPort;
-import com.uhf.uhf.serialport.SerialPortFinder;
+import com.nativec.tools.ModuleManager;
+import com.nativec.tools.SerialPort;
+import com.nativec.tools.SerialPortFinder;
 import com.uhf.uhf.spiner.AbstractSpinerAdapter.IOnItemSelectListener;
 import com.uhf.uhf.spiner.SpinerPopWindow;
 import com.ui.base.BaseActivity;
@@ -25,6 +28,9 @@ import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
 
 @SuppressLint("HandlerLeak")
 /**
@@ -58,27 +64,30 @@ public class ConnectRs232 extends BaseActivity {
 	private int mPosPort = -1;
 	
 	private SerialPortFinder mSerialPortFinder;
-	
 	String[] entries = null;
 	String[] entryValues = null;
 	
 	public static SerialPort mSerialPort = null;
 	private int baud = 115200;
-	
+	private BluetoothAdapter mBluetoothAdapter = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.connect_rs232);
-		
 		((UHFApplication) getApplication()).addActivity(this);
 		
-		mSerialPortFinder = new SerialPortFinder();
+		//mSerialPortFinder = new SerialPortFinder();
 		
-		entries = mSerialPortFinder.getAllDevices();
-        entryValues = mSerialPortFinder.getAllDevicesPath();
-		
+		//entries = mSerialPortFinder.getAllDevices();
+        //entryValues = mSerialPortFinder.getAllDevicesPath();
+		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		if (mBluetoothAdapter == null) {
+			showTextToast("没有发现蓝牙模块,程序中止");
+			finish();
+			return;
+		}
 		mConectButton = (TextView) findViewById(R.id.textview_connect);
-
+/*
 		mPortTextView =  (TextView) findViewById(R.id.comport_text);
 		mBaud115200View =  (TextView) findViewById(R.id.baud_115200);
 		mBaud38400View =  (TextView) findViewById(R.id.baud_38400);
@@ -109,12 +118,15 @@ public class ConnectRs232 extends BaseActivity {
 				baud = 38400;
 			}
 		});
-
+*/
 		mConectButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
-				
+
+				Intent serverIntent = new Intent(getApplicationContext(), DeviceListActivity.class);
+				startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+				/*
 				if (mPortList.indexOf(mPortTextView.getText().toString()) >= 0)
 					mPosPort = mPortList.indexOf(mPortTextView.getText().toString());
 				
@@ -144,11 +156,14 @@ public class ConnectRs232 extends BaseActivity {
 						
 						return ;
 					}
-					
+					if (!ModuleManager.newInstance().setUHFStatus(true)) {
+						throw new RuntimeException("UHF RFID power on failure,may you open in other" +
+								" Process and do not exit it");
+					}
+
 					Intent intent;
 					intent = new Intent().setClass(ConnectRs232.this, MainActivity.class);
 					startActivity(intent);
-					ControlGPIO.newInstance().JNIwriteGPIO(1);
 					//finish();
 				} catch (SecurityException e) {
 					Toast.makeText(
@@ -165,10 +180,11 @@ public class ConnectRs232 extends BaseActivity {
 							getApplicationContext(),
 							getResources().getString(R.string.error_configuration),
 							Toast.LENGTH_SHORT).show();
-				}
+				}*/
 			}
 		});
-		
+
+		/*
 		mDropPort.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				showPortSpinWindow();
@@ -187,6 +203,7 @@ public class ConnectRs232 extends BaseActivity {
 				setPortText(pos);
 			}
 		});
+		*/
 	}
 	
 	private void showPortSpinWindow() {
@@ -194,17 +211,120 @@ public class ConnectRs232 extends BaseActivity {
 		mSpinerPort.showAsDropDown(mDropPort);
 	}
 
+	private BluetoothSocket newserial=null;
+	public static final UUID myuuid =  UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	private static final int REQUEST_CONNECT_DEVICE = 1;
+	private static final int REQUEST_ENABLE_BT = 2;
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.d(TAG, "onActivityResult " + resultCode);
+		switch (requestCode) {
+			case REQUEST_CONNECT_DEVICE:
+				// When DeviceListActivity returns with a device to connect
+				if (resultCode == Activity.RESULT_OK) {
+					// Get the device MAC address
+					String address = data.getExtras()
+							.getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+					// Save_config("lastdevice_addr",address);
+					// Get the BLuetoothDevice object
+					BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+					// Attempt to connect to the device
+					//mChatService.connect(device);
+					Log.d(TAG,"btaddress:"+address);
+					showTextToast("正在尝试连接...");
+					try {
+						newserial = device.createRfcommSocketToServiceRecord(myuuid);
+						newserial.connect();
+					} catch (Exception e) {
+						// TODO: handle exception
+						try {
+							newserial.close();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						newserial = null;
+						showTextToast("连接失败...");
+						return ;
+					}
+
+					if((newserial!=null)&&(newserial.isConnected()));
+					else {
+						showTextToast("连接失败...");
+						return;
+					}
+
+					try {
+						mReaderHelper = ReaderHelper.getDefaultHelper();
+						mReaderHelper.setReader(newserial.getInputStream(), newserial.getOutputStream());
+					} catch (Exception e) {
+						e.printStackTrace();
+						try {
+							newserial.close();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						newserial = null;
+						showTextToast("连接失败...");
+						return ;
+					}
+
+					Intent intent;
+					intent = new Intent().setClass(ConnectRs232.this, MainActivity.class);
+					startActivity(intent);
+
+				}
+				break;
+
+			case REQUEST_ENABLE_BT:
+				// When the request to enable Bluetooth returns
+				if (resultCode == Activity.RESULT_OK) {
+					// Bluetooth is now enabled, so set up a chat session
+					//setupChat();
+				} else {
+					// User did not enable Bluetooth or an error occured
+					Log.d(TAG, "Bluetooth not enabled");
+					showTextToast("蓝牙功能没有打开,程序无法运行");
+					finish();
+				}
+				break;
+		}
+	}
+
+	private Toast toast = null;
+	private void showTextToast(String msg) {
+		if (toast == null) {
+			toast = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+			toast.setText(msg);
+		} else {
+			toast.setText(msg);
+		}
+		toast.show();
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		Log.e(TAG, "++ ON START ++");
+		// If BT is not on, request that it be enabled.
+		// setupChat() will then be called during onActivityResult
+		if (!mBluetoothAdapter.isEnabled()) {
+			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+			startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+			// Otherwise, setup the chat session
+		}
+	}
+
+
 	private void setPortText(int pos){
 		if (pos >= 0 && pos < mPortList.size()){
 			String value = mPortList.get(pos);
 			mPortTextView.setText(value);
 			mPosPort = pos;
+
 		}
 	}
 
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			
 			finish();
 
 			return true;

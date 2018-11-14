@@ -22,8 +22,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.com.tools.ExcelUtils;
-import com.reader.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.tools.ExcelUtils;
+import com.uhf.uhf.MainActivity;
 import com.uhf.uhf.R;
 
 import java.io.File;
@@ -47,6 +49,7 @@ public class DialogCustomed {
     private Window window;
 
     private List<InventoryBuffer.InventoryTagMap> mTags = null;
+    private List<OperateTagBuffer.OperateTagMap> mOperationTags = null;
 
     private EditText mFileName = null;
     private TextView mDirectory = null;
@@ -125,8 +128,11 @@ public class DialogCustomed {
                 if (mFileName.getText().toString().equals("") || mFileName == null || mFileName.length() == 0) {
                     Toast.makeText(mContext,"The file is not allowed null!",Toast.LENGTH_LONG).show();
                     return;
-                } else if (mTags == null || mTags.size() == 0) {
+                } else if ((mTags == null || mTags.size() == 0 ) && (mOperationTags == null || mOperationTags.size() == 0)) {
                     Toast.makeText(mContext,"The tags is empty!",Toast.LENGTH_LONG).show();
+                    return;
+                } else if (mDirectory.getText().toString().equals(mRootDirMark)) {
+                    Toast.makeText(mContext,"Please select directory!",Toast.LENGTH_LONG).show();
                     return;
                 }
                 final ProgressDialog progressDialog = new ProgressDialog(mContext);
@@ -137,7 +143,11 @@ public class DialogCustomed {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        ExcelUtils.writeTagToExcel(file,mTags);
+                        if (MainActivity.mSaveType == 0) {
+                            ExcelUtils.writeTagToExcel(file,mTags);
+                        } else {
+                            ExcelUtils.writeOperateTagToExcel(file,mOperationTags);
+                        }
                        MediaScannerConnection.scanFile(mContext,
                                 new String[] {file}, null, null);
                         progressDialog.dismiss();
@@ -204,7 +214,7 @@ public class DialogCustomed {
     public void setTags(List<InventoryBuffer.InventoryTagMap> maps) {
         this.mTags = maps;
     }
-
+    public void setOperationTags(List<OperateTagBuffer.OperateTagMap> maps) {this.mOperationTags = maps;}
     /**
      * close the dialog
      */

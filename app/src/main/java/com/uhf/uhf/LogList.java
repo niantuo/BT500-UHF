@@ -16,11 +16,12 @@ import android.widget.ListView;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.reader.base.ERROR;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
 
 public class LogList extends LinearLayout {
 	private Context mContext;

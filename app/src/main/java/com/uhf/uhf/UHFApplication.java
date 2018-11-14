@@ -11,9 +11,10 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 
-import com.com.tools.Beeper;
-import com.reader.base.ERROR;
-import com.reader.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.UHFLib;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.tools.Beeper;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -52,6 +53,7 @@ public class UHFApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 		try {
+			UHFLib.setContext(this);
 			ReaderHelper.setContext(getApplicationContext());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -11,14 +11,6 @@ import android.view.View.OnClickListener;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.reader.base.CMD;
-import com.reader.base.ERROR;
-import com.reader.base.ReaderBase;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
 import com.uhf.uhf.setpage.PageReaderAddress;
 import com.uhf.uhf.setpage.PageReaderAntDetector;
 import com.uhf.uhf.setpage.PageReaderAntenna;
@@ -34,6 +26,15 @@ import com.uhf.uhf.setpage.PageReaderRegion;
 import com.uhf.uhf.setpage.PageReaderReturnLoss;
 import com.uhf.uhf.setpage.PageReaderTemperature;
 import com.ui.base.BaseActivity;
+
+import cn.tonyandmoney.tina.uhf_lib.base.CMD;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.base.ReaderBase;
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderSetting;
 
 public class Setting extends BaseActivity {
     private Context mContext;
@@ -275,7 +276,7 @@ public class Setting extends BaseActivity {
         if (pi != null)
             version = pi.versionName;
         textView.setText(mContext.getResources().getString(R.string.version)
-                + "  " + version);
+               + version);
     }
 
     @Override

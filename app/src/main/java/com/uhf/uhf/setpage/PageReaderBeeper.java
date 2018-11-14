@@ -13,14 +13,14 @@ import android.view.View.OnClickListener;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.com.tools.Beeper;
-import com.reader.base.ERROR;
-import com.reader.base.ReaderBase;
-import com.reader.helper.ISO180006BOperateTagBuffer;
-import com.reader.helper.InventoryBuffer;
-import com.reader.helper.OperateTagBuffer;
-import com.reader.helper.ReaderHelper;
-import com.reader.helper.ReaderSetting;
+import cn.tonyandmoney.tina.uhf_lib.base.ERROR;
+import cn.tonyandmoney.tina.uhf_lib.base.ReaderBase;
+import cn.tonyandmoney.tina.uhf_lib.helper.ISO180006BOperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.InventoryBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.OperateTagBuffer;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderHelper;
+import cn.tonyandmoney.tina.uhf_lib.helper.ReaderSetting;
+import cn.tonyandmoney.tina.uhf_lib.tools.Beeper;
 import com.uhf.uhf.LogList;
 import com.uhf.uhf.R.id;
 import com.uhf.uhf.R.layout;
@@ -84,22 +84,23 @@ public class PageReaderBeeper extends BaseActivity {
 				switch (mGroupBeeper.getCheckedRadioButtonId()) {
 				case id.set_beeper_quiet:
 					btMode = 0;
-					beepMode = Beeper.BeepMode.QUITE;
+					//beepMode = Beeper.BeepMode.QUITE;
 					break;
 				case id.set_beeper_all:
 					btMode = 1;
-					beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
+					//beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
 					break;
 				case id.set_beeper_one:
 					btMode = 2;
-					beepMode = Beeper.BeepMode.BEEP_PER_TAG;
+					//beepMode = Beeper.BeepMode.BEEP_PER_TAG;
 					break;
 				default:
-					beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
+					//beepMode = Beeper.BeepMode.BEEP_INVENTORIED;
+                    btMode = 1;
 					break;
 				}
-				Beeper.setBeepMode(beepMode);
-				//mReader.setBeeperMode(m_curReaderSetting.btReadId, btMode);
+				//Beeper.setBeepMode(beepMode);
+				mReader.setBeeperMode(m_curReaderSetting.btReadId, btMode);
 				m_curReaderSetting.btBeeperMode = btMode;
 			}
 		});
@@ -119,7 +120,7 @@ public class PageReaderBeeper extends BaseActivity {
 			mGroupBeeper.check(id.set_beeper_quiet);
 		} else if (m_curReaderSetting.btBeeperMode == 1) {
 			mGroupBeeper.check(id.set_beeper_all);
-		} else if (m_curReaderSetting.btBeeperMode == 2) {
+		} else if (m_curReaderSetting.btBeeperMode == +2) {
 			mGroupBeeper.check(id.set_beeper_one);
 		}
 	}
@@ -138,7 +139,6 @@ public class PageReaderBeeper extends BaseActivity {
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if (mLogList.tryClose()) return true;
 		}
-
 		return super.onKeyDown(keyCode, event);
 	}
 	
